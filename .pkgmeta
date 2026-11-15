@@ -1,0 +1,19 @@
+package-as: AHDBAuctionatorSync
+
+# CurseForge dependency slugs (not bundled into the addon ZIP).
+required-dependencies:
+  - auction-house-database
+  - auctionator
+
+manual-changelog:
+  filename: CHANGELOG.md
+  markup-type: markdown
+
+ignore:
+  - .github
+  - .gitignore
+  - .pkgmeta
+  - tools
+  - tests
+  - docs
+  - .release

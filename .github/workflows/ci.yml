@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout source and tags
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install Lua 5.1
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lua5.1
+      - name: Verify Lua and tests
+        run: |
+          luac5.1 -p AHDBAuctionatorSync.lua tests/test_sync.lua
+          lua5.1 tests/test_sync.lua
+      - name: Build without publishing
+        uses: BigWigsMods/packager@01e8631a69c69d7654c788d152630d5fed9e3812 # v2.7.0; Forever support
+        with:
+          args: -d -g forever
+          pandoc: 'false'
+      - name: Verify installable archive
+        run: python3 tools/check_package.py
+      - name: Retain installable test package
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: addon-test-package
+          path: .release/*.zip
+          if-no-files-found: error
