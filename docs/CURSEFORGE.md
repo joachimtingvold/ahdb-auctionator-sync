@@ -1,39 +1,32 @@
 # AHDB Auctionator Sync
 
-Use **AHDB’s historical auction-house prices** alongside addons that depend on
-**Auctionator’s pricing data**, with just one full scan.
+This addon syncs prices from AHDB to Auctionator. Why would you need that?
 
-Many price-aware addons integrate with Auctionator, while few integrate directly
-with AHDB. Keeping both databases current normally requires separate scans—but
-the **15-minute auction-house full-scan cooldown is shared**, preventing AHDB and
-Auctionator from scanning in rapid succession.
+Many price-aware addons integrate with Auctionator, while few integrate directly with AHDB. Keeping both databases current normally requires separate scans. However, the auction house has a shared 15-minute full-scan cooldown, so AHDB and Auctionator cannot scan in rapid succession. If AHDB scans first, you would have to wait another 15 minutes before scanning with Auctionator, or keep using older prices.
 
-AHDB Auctionator Sync automatically copies prices from completed AHDB scans into
-Auctionator’s pricing database. **Scan once with AHDB, keep its price history,
-and let Auctionator-dependent addons use prices from the same scan.**
+AHDB Auctionator Sync copies prices from completed AHDB scans into Auctionator's pricing database. Scan once with AHDB, keep its price history, and let Auctionator-dependent addons use prices from the same scan.
 
 ## Features
 
-- **Automatic synchronization:** Updates Auctionator’s prices when AHDB completes a faction auction-house full scan.
-- **No second scan:** Reuses AHDB’s results without additional auction-house queries or waiting for another scan cooldown.
-- **Persistent prices:** Updates Auctionator’s saved pricing database and preserves its normal daily price history.
-- **Manual imports:** Imports existing AHDB price history without scanning again.
-- **Market separation:** Keeps neutral auction-house prices out of your faction’s Auctionator database.
-- **Simple controls:** Check synchronization status, toggle automatic imports, and set an age limit for historical imports.
+- Sync prices automatically when AHDB completes a faction auction-house full scan.
+- Reuse the scan results without additional auction-house queries.
+- Update Auctionator's saved prices and preserve its daily price history.
+- Import existing AHDB prices without scanning again.
+- Keep neutral auction-house prices separate from your faction's prices.
+- Check sync status, turn automatic imports on or off, and set an age limit for historical imports.
 
 ## Requirements
 
-Both **Auction House DataBase (AHDB)** and **Auctionator** must be installed and enabled.
+Auction House DataBase (AHDB) and Auctionator must both be installed and enabled.
 
 ## Getting started
 
 1. Install this addon alongside AHDB and Auctionator.
 2. Type `/ahsync status` to check that the scan listener is active.
 3. Complete a full scan using AHDB. A chat message confirms the import into Auctionator.
-4. Disable Auctionator’s automatic full scans if AHDB is your primary scanner.
+4. Disable Auctionator's automatic full scans if AHDB is your primary scanner.
 
-Already have AHDB scan history? Use `/ahsync import` to import stored prices
-immediately. By default, manual imports accept prices up to 48 hours old.
+Already have AHDB scan history? Use `/ahsync import` to import stored prices immediately. By default, manual imports accept prices up to 48 hours old.
 
 ## Commands
 
@@ -49,9 +42,9 @@ immediately. By default, manual imports accept prices up to 48 hours old.
 
 ## Limitations
 
-- **Prices, not listings:** Updates Auctionator’s pricing database. Addons that require individual auction listings or Auctionator scan events may need a separate integration.
-- **Item variants:** AHDB’s base item IDs may not distinguish random enchantments and other item variants.
-- **Missing items:** Items absent from a new scan are not automatically removed from Auctionator’s database.
-- **Faction markets only:** Neutral auction-house scans remain in AHDB and are not imported.
+- Only prices are synced. Addons that need individual auction listings or Auctionator scan events may need a separate integration.
+- AHDB identifies items by their base item ID, so random enchantments and other item variants may share a price.
+- Items missing from a new scan are not automatically removed from Auctionator's database.
+- Neutral auction-house scans stay in AHDB and are not imported.
 
 MIT licensed. An independent integration, not affiliated with the AHDB or Auctionator maintainers.

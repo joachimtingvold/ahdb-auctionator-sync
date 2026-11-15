@@ -1,36 +1,16 @@
-# Publishing AHDB Auctionator Sync
+# Releasing
 
-## Publishing arrangement
+CurseForge packages releases from this repository when a new tag is pushed. Configure its GitHub integration to build tags only. GitHub Actions checks the code and package, but does not publish anything. No CurseForge API key is needed in GitHub.
 
-CurseForge's built-in repository packager publishes this addon from the public
-GitHub repository: https://github.com/joachimtingvold/ahdb-auctionator-sync.
-Configure it to package **tags only**, not every commit. GitHub Actions runs
-checks and creates test artifacts; it does not upload to CurseForge or create
-GitHub Releases. No `CF_API_KEY` or `CURSEFORGE_PROJECT_ID` GitHub setting is needed.
+## Setup
 
-## One-time CurseForge setup
+1. Connect `joachimtingvold/ahdb-auctionator-sync` through the CurseForge project's repository integration and enable packaging for tags only. Adding a project-page link alone does not enable packaging.
+2. Check that AHDB and Auctionator are listed as required dependencies. These are also declared in `.pkgmeta`.
+3. Wait for GitHub CI to pass before publishing.
 
-1. Create the World of Warcraft addon project and complete any required author
-   verification/project approval. Use [CURSEFORGE.md](CURSEFORGE.md) for its listing.
-2. In its repository/source integration settings, connect the public GitHub
-   repository above and choose packaging on **tags only**. A source-code/project
-   page link alone is not necessarily a packaging integration: confirm that
-   automatic packaging is enabled in the actual integration settings.
-3. Confirm that the supported file versions include **Forever / 1.60.1**, the
-   current TOC target (interface 16001). Do not substitute Retail or Classic.
-4. Confirm the required dependency projects: `auction-house-database` and
-   `auctionator`. `.pkgmeta` declares those relations without bundling their code.
-5. Push the source to `main` and wait for GitHub CI. Do not create a release tag
-   until the integration, project approval, and game version are configured.
+## Publish a release
 
-CurseForge controls project/file moderation and initial publication requirements.
-A first tagged build does not inherently require a previously uploaded file;
-actual availability depends on the project's integration and approval status.
-
-## First automated release
-
-There is no need to make an artificial code change after the initial commit.
-Once integration is active and CI has passed, tag that existing commit:
+Update `CHANGELOG.md`, commit and push the changes, then tag the commit you want to release. For the first release:
 
 ```sh
 git switch main
@@ -39,64 +19,35 @@ git tag -a v0.3.0-beta -m "Release v0.3.0-beta"
 git push origin v0.3.0-beta
 ```
 
-Creating/pushing a new tag is the release event. It can identify the already
-committed code. Enable the integration **before** pushing the first tag; old
-existing tags are not guaranteed to be picked up retroactively.
+A tag can point to an existing commit; no extra code change is needed. Enable the CurseForge integration before pushing the tag.
 
-Check CurseForge's packaging/build activity and then its Files page. Confirm
-that the file is Beta, the version is correct, the supported client is Forever,
-and AHDB/Auctionator are required dependencies. Upload/build success and public
-approval are separate states. Packaging failures should be investigated in the
-CurseForge build log before uploading a duplicate file manually.
+Use a tag such as `v0.3.1` for a stable release or `v0.4.0-beta.1` for a beta. Do not move a tag after publishing it.
 
-## Changelog and version
+Check CurseForge's build log and Files page after tagging. A successful build may still need moderation before it becomes public.
 
-The TOC's `@project-version@` token becomes the packaged version. Keep it in the
-source rather than replacing it manually for each release.
+## Changelog
 
-`.pkgmeta` selects `CHANGELOG.md` as a Markdown manual changelog. The complete
-file (including previous entries) supplies release notes; the annotated tag
-message is not the changelog. Add a new dated heading and notes before tagging
-subsequent versions. If the native packager's output differs, inspect the build
-log/metadata support rather than assuming BigWigs and CurseForge are identical.
+`.pkgmeta` tells the packager to use `CHANGELOG.md` for release notes. The whole file is used, including previous entries. The tag message is not the changelog.
 
-Use `v0.3.1` for a stable release and `v0.4.0-beta.1` for a beta. Verify the
-resulting CurseForge release type on the first build. Never move an already
-published tag to different code.
+Keep `@project-version@` in the source TOC. The packager replaces it with the tag when building the addon.
 
-## Manual first upload: only if needed
+## If a manual upload is needed
 
-If CurseForge explicitly requires an initial file for project approval, or its
-repository integration cannot yet build the addon:
+A first tagged build does not normally need a previous upload. If CurseForge requests a file for project approval:
 
-1. Use the provided **installable** `AHDBAuctionatorSync-v0.3.0-beta-forever.zip`
-   (or the original `AHDBAuctionatorSync-0.3.0-beta-in-game-tested.zip`). Do not
-   upload the repository/source ZIP or GitHub's autogenerated source archive.
-2. In the project's Files/upload interface, upload the ZIP with its top-level
-   `AHDBAuctionatorSync` folder intact. Do not upload individual Lua/TOC files.
-3. Set the file version/name to `0.3.0-beta`, release type **Beta**, and game
-   version **Forever / 1.60.1**. Paste the corresponding CHANGELOG.md entry into
-   the changelog field. Confirm AHDB and Auctionator as required dependencies.
-4. Submit for review. Follow any specific approval feedback from CurseForge.
-5. Once repository packaging works, use a **new** version/tag (for example
-   `v0.3.1-beta.1` with a matching changelog entry) to avoid duplicating the
-   manually published version. A documentation-only release is valid; say what
-   changed in its changelog.
+1. Upload the installable addon ZIP, with the `AHDBAuctionatorSync` folder inside it. Do not use the repository source ZIP.
+2. Choose the release type and supported game version, and paste the release notes from `CHANGELOG.md`.
+3. Check the required dependencies and submit for review.
 
-No manual upload is needed merely because the repository starts without tags.
-Do not run a separate GitHub upload workflow alongside native packaging.
+If that version is published manually, use a new version and tag for the next automated release to avoid duplicates. If automatic packaging fails, check its build log first.
 
-## Development checks
+## Local checks
 
-From the repository root, with Lua 5.1 installed:
+Run from the repository root with Lua 5.1 installed:
 
 ```sh
 luac5.1 -p AHDBAuctionatorSync.lua tests/test_sync.lua
 lua5.1 tests/test_sync.lua
 ```
 
-CI runs those checks, then BigWigs Packager in **no-upload** mode and verifies
-the resulting ZIP. Its `addon-test-package` artifact is a test download, not a
-published release. Extract GitHub's artifact wrapper to obtain the addon ZIP.
-These mocked tests supplement the supplied in-game validation; they do not run
-the WoW client. The addon's command is `/ahsync import`.
+CI also builds and checks an installable ZIP without uploading it. Its `addon-test-package` artifact contains that ZIP inside GitHub's download wrapper. The tests use mocked AHDB and Auctionator APIs; they do not run the game client.
