@@ -13,7 +13,5 @@ ignore:
   - .github
   - .gitignore
   - .pkgmeta
-  - tools
   - tests
-  - docs
   - .release
