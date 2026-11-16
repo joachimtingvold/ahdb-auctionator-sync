@@ -26,22 +26,50 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq lua5.1
-      - name: Lua syntax and named test cases
+      - name: Independent Lua test cases
+        env:
+          LC_ALL: C
         run: |
           luac5.1 -p AHDBAuctionatorSync.lua
-          mapfile -t cases < <(find tests -maxdepth 1 -name '[0-9][0-9][0-9]_*.lua' | LC_ALL=C sort)
-          lua5.1 tests/run.lua "${cases[@]}"
+          shopt -s nullglob
+          cases=(tests/[0-9][0-9][0-9]_*.lua)
+          test "${#cases[@]}" -gt 0 || { echo 'No Lua test cases found'; exit 1; }
+          failed=0
+          for test in "${cases[@]}"; do
+            echo "::group::$test"
+            if lua5.1 "$test"; then
+              echo "PASS: $test"
+            else
+              echo "FAIL: $test"
+              failed=1
+            fi
+            echo '::endgroup::'
+          done
+          exit "$failed"
       - name: Build with BigWigs without publishing
         uses: BigWigsMods/packager@01e8631a69c69d7654c788d152630d5fed9e3812 # v2.7.0
         with:
           args: -d -g forever
           pandoc: 'false'
-      - name: Check package contents
+      - name: Independent Python test cases
+        env:
+          LC_ALL: C
         run: |
-          for test in tests/[0-9][0-9][0-9]_*.py; do
-            echo "RUN: $test"
-            python3 "$test"
+          shopt -s nullglob
+          cases=(tests/[0-9][0-9][0-9]_*.py)
+          test "${#cases[@]}" -gt 0 || { echo 'No Python test cases found'; exit 1; }
+          failed=0
+          for test in "${cases[@]}"; do
+            echo "::group::$test"
+            if python3 "$test"; then
+              echo "PASS: $test"
+            else
+              echo "FAIL: $test"
+              failed=1
+            fi
+            echo '::endgroup::'
           done
+          exit "$failed"
       - name: Retain test package
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
