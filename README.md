@@ -60,20 +60,3 @@ If the listener is inactive, check that both dependencies are enabled, run `/rel
 If no prices are imported, check that the scan completed at your own faction's auction house. For older stored prices, try `/ahsync age 72` followed by `/ahsync import`.
 
 For errors, enable `/console scriptErrors 1` and report the error with your AHDB and Auctionator versions in [GitHub Issues](https://github.com/joachimtingvold/ahdb-auctionator-sync/issues).
-
-## Development and releases
-
-Make changes on a branch and open a PR to `main`. CI runs the Lua tests, builds the addon with BigWigs Packager, and checks the ZIP. Update `CHANGELOG.md` in the PR when needed; CurseForge uses it for release notes.
-
-After you merge the PR, CI checks the merged commit and creates the next version tag. The first tag is `v0.3.0-beta`; later releases increment the patch number and keep the suffix, for example `v0.3.1-beta`. If the latest version is stable, the next version stays stable. Direct pushes to `main` run checks but do not create tags. Rerunning a completed release does not tag the same commit again.
-
-Connect CurseForge's repository integration and choose tags only. It packages the new tag and uploads the addon. GitHub Actions does not upload files to CurseForge or need a CurseForge API key.
-
-In GitHub's branch rules for `main`, require a PR and the `test-and-package` status check before merging. Allow the tagging job to write repository contents in Actions settings. Branch rules must be configured in GitHub; the workflow alone does not prevent merging a failed PR.
-
-To run the tests locally:
-
-```sh
-luac5.1 -p AHDBAuctionatorSync.lua tests/test_sync.lua
-lua5.1 tests/test_sync.lua
-```

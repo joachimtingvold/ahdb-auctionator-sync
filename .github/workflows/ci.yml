@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: ['**']
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -11,63 +11,78 @@ permissions:
   contents: read
 
 jobs:
-  test-and-package:
+  commits:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    outputs:
+      matrix: ${{ steps.select.outputs.matrix }}
     steps:
-      - name: Checkout source and tags
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
+          persist-credentials: false
+      - name: Test CI commit selection
+        run: python3 tests/test_ci.py
+      - id: select
+        name: Select pushed commits and PR merge result
+        run: python3 tests/select_commits.py
+
+  checks:
+    name: Check ${{ matrix.label }}
+    needs: commits
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.commits.outputs.matrix) }}
+    steps:
+      - name: Checkout test suite
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          path: ci
+          persist-credentials: false
+      - name: Checkout commit under test
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: ${{ matrix.repository }}
+          ref: ${{ matrix.sha }}
+          fetch-depth: 0
+          path: source
           persist-credentials: false
       - name: Install Lua 5.1
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq lua5.1
-      - name: Verify Lua and tests
+      - name: Lua syntax and named test cases
+        working-directory: source
         run: |
-          luac5.1 -p AHDBAuctionatorSync.lua tests/test_sync.lua
-          lua5.1 tests/test_sync.lua
-      - name: Build without publishing
-        uses: BigWigsMods/packager@01e8631a69c69d7654c788d152630d5fed9e3812 # v2.7.0; Forever support
+          luac5.1 -p AHDBAuctionatorSync.lua
+          mapfile -t cases < <(find ../ci/tests/lua -name 'test_*.lua' | sort)
+          lua5.1 ../ci/tests/run.lua "${cases[@]}"
+      - name: Build with BigWigs without publishing
+        uses: BigWigsMods/packager@01e8631a69c69d7654c788d152630d5fed9e3812 # v2.7.0
         with:
-          args: -d -g forever
+          args: -d -g forever -t source
           pandoc: 'false'
-      - name: Verify installable archive
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import zipfile
-
-          archives = list(Path(".release").glob("*.zip"))
-          assert len(archives) == 1, f"Expected one package, found {archives}"
-          with zipfile.ZipFile(archives[0]) as archive:
-              files = {name for name in archive.namelist() if not name.endswith("/")}
-              prefix = "AHDBAuctionatorSync/"
-              required = {prefix + name for name in (
-                  "AHDBAuctionatorSync.lua", "AHDBAuctionatorSync.toc", "LICENSE",
-                  "README.md", "CHANGELOG.md",
-              )}
-              assert required <= files, f"Missing addon files: {required - files}"
-              assert all(name.startswith(prefix) and ".." not in name.split("/") for name in files)
-              assert not any(part in {".github", "tests", "tools", "docs", ".git"}
-                             for name in files for part in name.split("/")), files
-              toc = archive.read(prefix + "AHDBAuctionatorSync.toc").decode()
-              assert "@project-version@" not in toc, "Version token was not replaced"
-              assert "## Interface: 16001" in toc
-              assert "## Dependencies: AuctionDB, Auctionator" in toc
-              assert archive.read(prefix + "AHDBAuctionatorSync.lua").replace(b"\r\n", b"\n") == Path(
-                  "AHDBAuctionatorSync.lua").read_bytes().replace(b"\r\n", b"\n"), "Addon code changed during packaging"
-              assert archive.read(prefix + "CHANGELOG.md").replace(b"\r\n", b"\n") == Path(
-                  "CHANGELOG.md").read_bytes().replace(b"\r\n", b"\n"), "Changelog differs"
-          print(f"PASS: {archives[0]} contains an installable Forever addon and changelog")
-          PY
-      - name: Retain installable test package
+      - name: Check package contents
+        working-directory: source
+        run: python3 ../ci/tests/check_package.py
+      - name: Retain test package
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: addon-test-package
-          path: .release/*.zip
+          name: addon-${{ matrix.label }}
+          path: source/.release/*.zip
           if-no-files-found: error
+
+  test-and-package:
+    if: always()
+    needs: [commits, checks]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every commit and merge check to pass
+        env:
+          SELECTION_RESULT: ${{ needs.commits.result }}
+          CHECKS_RESULT: ${{ needs.checks.result }}
+        run: test "$SELECTION_RESULT" = success && test "$CHECKS_RESULT" = success
 
   tag-release:
     name: Tag merged PR
