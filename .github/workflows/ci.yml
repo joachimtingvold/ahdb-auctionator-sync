@@ -29,7 +29,7 @@ jobs:
       - name: Lua syntax and named test cases
         run: |
           luac5.1 -p AHDBAuctionatorSync.lua
-          mapfile -t cases < <(find tests/lua -name 'test_*.lua' | sort)
+          mapfile -t cases < <(find tests -maxdepth 1 -name '[0-9][0-9][0-9]_*.lua' | LC_ALL=C sort)
           lua5.1 tests/run.lua "${cases[@]}"
       - name: Build with BigWigs without publishing
         uses: BigWigsMods/packager@01e8631a69c69d7654c788d152630d5fed9e3812 # v2.7.0
@@ -37,7 +37,11 @@ jobs:
           args: -d -g forever
           pandoc: 'false'
       - name: Check package contents
-        run: python3 tests/check_package.py
+        run: |
+          for test in tests/[0-9][0-9][0-9]_*.py; do
+            echo "RUN: $test"
+            python3 "$test"
+          done
       - name: Retain test package
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
