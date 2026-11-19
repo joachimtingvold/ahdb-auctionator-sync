@@ -1,94 +1,63 @@
 name: Release
 
 on:
-  push:
+  pull_request_target:
     branches: [main]
+    types: [opened, reopened, synchronize, labeled, unlabeled, closed]
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
-  merged-pr:
+  release-label:
+    name: Validate release label
+    if: github.event.action != 'closed'
     runs-on: ubuntu-latest
-    outputs:
-      number: ${{ steps.pr.outputs.result }}
+    timeout-minutes: 5
+    concurrency:
+      group: release-label-${{ github.event.pull_request.number }}
+      queue: max
     permissions:
       contents: read
-      pull-requests: read
+      pull-requests: write
     steps:
-      - id: pr
-        name: Check for a merged PR
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+      # pull_request_target checks out trusted base code here.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          result-encoding: string
-          script: |
-            const { owner, repo } = context.repo;
-            const pulls = await github.paginate(
-              github.rest.repos.listPullRequestsAssociatedWithCommit,
-              { owner, repo, commit_sha: context.sha, per_page: 100 }
-            );
-            const merged = pulls.find(pr =>
-              pr.merged_at && pr.base.ref === 'main' &&
-              pr.base.repo.full_name === `${owner}/${repo}` &&
-              pr.merge_commit_sha === context.sha
-            );
-            return merged ? String(merged.number) : '';
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Apply the opening default and validate current labels
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_ACTION: ${{ github.event.action }}
+        run: python3 .github/release.py validate "$PR_NUMBER" "$PR_ACTION"
 
   tests:
-    needs: merged-pr
-    if: needs.merged-pr.outputs.number != ''
+    if: github.event.action == 'closed' && github.event.pull_request.merged == true
+    permissions:
+      contents: read
     uses: ./.github/workflows/ci.yml
+    with:
+      ref: ${{ github.event.pull_request.merge_commit_sha }}
 
   tag-release:
     name: Tag merged PR
-    needs: [merged-pr, tests]
+    needs: tests
     runs-on: ubuntu-latest
     timeout-minutes: 5
     concurrency:
       group: addon-release-tags
-      cancel-in-progress: false
+      queue: max
     permissions:
       contents: write
+      pull-requests: read
     steps:
-      - name: Tag the next version after a tested merge
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
-        env:
-          MERGED_PR: ${{ needs.merged-pr.outputs.number }}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          script: |
-            const { owner, repo } = context.repo;
-            const sha = context.sha;
-            const tags = await github.paginate(github.rest.repos.listTags,
-              { owner, repo, per_page: 100 });
-            const pattern = /^v(\d+)\.(\d+)\.(\d+)(-(alpha|beta)(?:\.(\d+))?)?$/;
-            const versions = tags.filter(tag => pattern.test(tag.name));
-            if (versions.some(tag => tag.commit.sha === sha)) {
-              core.info('This commit already has a version tag.');
-              return;
-            }
-            const parts = name => {
-              const m = name.match(pattern);
-              return [+m[1], +m[2], +m[3],
-                m[5] === 'alpha' ? 0 : m[5] === 'beta' ? 1 : 2, +(m[6] || 0)];
-            };
-            versions.sort((a, b) => {
-              const av = parts(a.name), bv = parts(b.name);
-              for (let i = 0; i < av.length; i++) {
-                if (av[i] !== bv[i]) return bv[i] - av[i];
-              }
-              return 0;
-            });
-            let version = 'v0.3.0-beta';
-            if (versions.length) {
-              const m = versions[0].name.match(pattern);
-              version = `v${+m[1]}.${+m[2]}.${+m[3] + 1}${m[4] || ''}`;
-            }
-            const tag = await github.rest.git.createTag({
-              owner, repo, tag: version,
-              message: `Release ${version} (PR #${process.env.MERGED_PR})`,
-              object: sha, type: 'commit'
-            });
-            await github.rest.git.createRef({
-              owner, repo, ref: `refs/tags/${version}`, sha: tag.data.sha
-            });
-            core.info(`Created ${version} for ${sha}`);
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+      - name: Push the next dated tag for the tested commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          MERGED_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+        run: python3 .github/release.py tag "$PR_NUMBER" "$MERGED_SHA"
