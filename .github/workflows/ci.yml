@@ -80,4 +80,5 @@ jobs:
         with:
           name: addon-test-package
           path: .release/*.zip
+          include-hidden-files: true
           if-no-files-found: error
