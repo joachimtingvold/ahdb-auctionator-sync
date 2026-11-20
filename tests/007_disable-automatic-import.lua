@@ -1,6 +1,6 @@
 -- Turning automatic sync off prevents imports from completed scans.
 -- Run independently: lua5.1 tests/007_disable-automatic-import.lua
-local addon_path = (arg[0]:match("^(.*)/") or ".") .. "/../AHDBAuctionatorSync.lua"
+local addon_path = (arg[0]:match("^(.*)/") or ".") .. "/../AuctionSync.lua"
 
 -- Arrange: provide only the WoW/addon interfaces needed by this case.
 local env = setmetatable({}, {__index = _G})
@@ -30,14 +30,14 @@ end
 
 local addon = assert(loadfile(addon_path))
 setfenv(addon, env)()
-frame.OnEvent(frame, "ADDON_LOADED", "AHDBAuctionatorSync")
+frame.OnEvent(frame, "ADDON_LOADED", "AuctionSync")
 frame.OnEvent(frame, "PLAYER_LOGIN")
 
 -- Act.
-env.SlashCmdList.AHDBAUCTIONATORSYNC("off")
+env.SlashCmdList.AUCTIONSYNC("off")
 listener(env.AuctionDB, {n = 1, item = {10940}, count = {2}, buyout = {200}})
 
 -- Assert.
-assert(env.AHDBAuctionatorSyncDB.enabled == false, "The off command did not disable sync")
+assert(env.AuctionSyncDB.enabled == false, "The off command did not disable sync")
 assert(#imports == 0, "A completed scan imported prices while sync was disabled")
 print("PASS: 007_disable-automatic-import.lua")

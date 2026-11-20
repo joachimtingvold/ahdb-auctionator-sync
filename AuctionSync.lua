@@ -1,11 +1,11 @@
--- AHDB Auctionator Sync: import AHDB faction scan prices into Auctionator.
+-- Auction Sync: import AHDB faction scan prices into Auctionator.
 -- Target client: World of Warcraft: Forever (Interface 16001).
 -- AHDB SCAN_DATA is a completed-scan callback. No auction-house queries are made.
 -- AHDB identifies items by base item ID, so randomized-item variants are not
 -- individually priced. See README.md for limitations and usage.
 
-local ADDON = "AHDBAuctionatorSync"
-local TAG = "|cff77ccffAHDB Auctionator Sync|r: "
+local ADDON = "AuctionSync"
+local TAG = "|cff77ccffAuction Sync|r: "
 local defaults = { enabled = true, importMaxAgeHours = 48 }
 local settings
 local installed = false
@@ -16,8 +16,8 @@ local function say(message)
 end
 
 local function initSaved()
-  AHDBAuctionatorSyncDB = AHDBAuctionatorSyncDB or {}
-  settings = AHDBAuctionatorSyncDB
+  AuctionSyncDB = AuctionSyncDB or {}
+  settings = AuctionSyncDB
   for key, default in pairs(defaults) do
     if settings[key] == nil then settings[key] = default end
   end
@@ -193,8 +193,8 @@ local function status()
   end
 end
 
-SLASH_AHDBAUCTIONATORSYNC1 = "/ahsync"
-SlashCmdList.AHDBAUCTIONATORSYNC = function(message)
+SLASH_AUCTIONSYNC1 = "/ahsync"
+SlashCmdList.AUCTIONSYNC = function(message)
   if not settings then initSaved() end
   local command, arg = (message or ""):match("^%s*(%S*)%s*(.-)%s*$")
   command, arg = (command or ""):lower(), (arg or ""):lower()

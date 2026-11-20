@@ -1,6 +1,6 @@
 -- Turning sync back on restores automatic imports.
 -- Run independently: lua5.1 tests/009_reenable-automatic-import.lua
-local addon_path = (arg[0]:match("^(.*)/") or ".") .. "/../AHDBAuctionatorSync.lua"
+local addon_path = (arg[0]:match("^(.*)/") or ".") .. "/../AuctionSync.lua"
 
 -- Arrange: provide only the WoW/addon interfaces needed by this case.
 local env = setmetatable({}, {__index = _G})
@@ -30,15 +30,15 @@ end
 
 local addon = assert(loadfile(addon_path))
 setfenv(addon, env)()
-frame.OnEvent(frame, "ADDON_LOADED", "AHDBAuctionatorSync")
+frame.OnEvent(frame, "ADDON_LOADED", "AuctionSync")
 frame.OnEvent(frame, "PLAYER_LOGIN")
 
 -- Act.
-env.SlashCmdList.AHDBAUCTIONATORSYNC("off")
-env.SlashCmdList.AHDBAUCTIONATORSYNC("on")
+env.SlashCmdList.AUCTIONSYNC("off")
+env.SlashCmdList.AUCTIONSYNC("on")
 listener(env.AuctionDB, {n = 1, item = {10940}, count = {2}, buyout = {200}})
 
 -- Assert.
-assert(env.AHDBAuctionatorSyncDB.enabled == true, "The on command did not enable sync")
+assert(env.AuctionSyncDB.enabled == true, "The on command did not enable sync")
 assert(#imports == 1, "Expected an automatic import after re-enabling sync")
 print("PASS: 009_reenable-automatic-import.lua")

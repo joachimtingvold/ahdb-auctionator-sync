@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Rename the addon to Auction Sync and the install folder to `AuctionSync`.
+
 ## 2026.11.20.02-beta — 2026-11-20
 
 This beta adds an installable addon ZIP to GitHub Releases.
