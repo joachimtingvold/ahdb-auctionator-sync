@@ -12,6 +12,8 @@ on:
       ref:
         required: true
         type: string
+      release-tag:
+        type: string
 
 permissions:
   contents: read
@@ -75,10 +77,29 @@ jobs:
             echo '::endgroup::'
           done
           exit "$failed"
-      - name: Retain test package
+      - name: Verify tagged TOC version
+        if: inputs.release-tag != ''
+        env:
+          RELEASE_TAG: ${{ inputs.release-tag }}
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          from zipfile import ZipFile
+
+          archive, = Path(".release").glob("*.zip")
+          with ZipFile(archive) as package:
+              toc = package.read("AHDBAuctionatorSync/AHDBAuctionatorSync.toc").decode()
+          versions = [line.partition(":")[2].strip() for line in toc.splitlines()
+                      if line.startswith("## Version:")]
+          tag = os.environ["RELEASE_TAG"]
+          if versions != [tag]:
+              raise SystemExit(f"Expected TOC version {tag!r}, found {versions!r}")
+          PY
+      - name: Retain validated package
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: addon-test-package
+          name: ${{ inputs.release-tag != '' && 'addon-release-package' || 'addon-test-package' }}
           path: .release/*.zip
           include-hidden-files: true
           if-no-files-found: error

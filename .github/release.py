@@ -28,20 +28,21 @@ def release_selection(labels):
     return selected.pop()
 
 
+def dated_tag_for_commit(tags, sha):
+    return next((name for name, target in tags.items()
+                 if target == sha and VERSION.fullmatch(name)), None)
+
+
 def next_tag(tags, sha, selection, now):
     """Return the next version, or None if this commit needs no new tag."""
-    if selection == 'release:none':
+    if selection == 'release:none' or dated_tag_for_commit(tags, sha):
         return None
 
     date = now.astimezone(OSLO).strftime('%Y.%m.%d')
     latest = 0
-    for tag, target in tags.items():
+    for tag in tags:
         match = VERSION.fullmatch(tag)
-        if not match:
-            continue
-        if target == sha:
-            return None
-        if match[1] == date:
+        if match and match[1] == date:
             latest = max(latest, int(match[2]))
 
     if latest == 99:
@@ -88,24 +89,41 @@ def tag_merge(repo, number, sha):
         print('Selected release:none. Skipping the tag.')
         return
 
-    tag = next_tag(remote_tags(), sha, selection, datetime.now(OSLO))
+    tags = remote_tags()
+    tag = next_tag(tags, sha, selection, datetime.now(OSLO))
     if tag is None:
-        print(f'{sha} already has a dated release tag.')
-        return
+        existing = dated_tag_for_commit(tags, sha)
+        print(f'{sha} already has release tag {existing}.')
+        return existing
 
     subprocess.run(['git', 'push', 'origin', f'{sha}:refs/tags/{tag}'], check=True)
     print(f'Pushed {tag} for {sha}.')
+    return tag
+
+
+def existing_tag(tag, main):
+    if not VERSION.fullmatch(tag):
+        raise ValueError(f'Expected a dated release tag, got {tag!r}.')
+    sha = remote_tags().get(tag)
+    if sha is None:
+        raise ValueError(f'Release tag {tag} does not exist on origin.')
+    subprocess.run(['git', 'merge-base', '--is-ancestor', sha, main], check=True)
+    return tag
 
 
 if __name__ == '__main__':
-    operation, pr_number, argument = sys.argv[1:]
-    repository = os.environ['GITHUB_REPOSITORY']
+    operation, value, argument = sys.argv[1:]
     try:
         if operation == 'validate':
-            validate(repository, pr_number, argument)
+            validate(os.environ['GITHUB_REPOSITORY'], value, argument)
         elif operation == 'tag':
-            tag_merge(repository, pr_number, argument)
+            tag = tag_merge(os.environ['GITHUB_REPOSITORY'], value, argument)
+        elif operation == 'existing-tag':
+            tag = existing_tag(value, argument)
         else:
             raise ValueError(f'Unknown operation: {operation}')
+        if operation != 'validate' and tag:
+            with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
+                print(f'tag={tag}', file=output)
     except (subprocess.CalledProcessError, ValueError) as error:
         sys.exit(str(error))
