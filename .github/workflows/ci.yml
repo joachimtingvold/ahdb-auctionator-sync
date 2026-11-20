@@ -56,7 +56,7 @@ jobs:
       - name: Build with BigWigs without publishing
         uses: BigWigsMods/packager@01e8631a69c69d7654c788d152630d5fed9e3812 # v2.7.0
         with:
-          args: -d -g forever
+          args: -d -g forever -n "{package-name}-{project-version}"
           pandoc: 'false'
       - name: Independent Python test cases
         env:
