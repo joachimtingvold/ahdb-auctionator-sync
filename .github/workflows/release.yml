@@ -4,13 +4,19 @@ on:
   pull_request_target:
     branches: [main]
     types: [opened, reopened, synchronize, labeled, unlabeled, closed]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing dated tag to package
+        required: true
+        type: string
 
 permissions: {}
 
 jobs:
   release-label:
     name: Validate release label
-    if: github.event.action != 'closed'
+    if: github.event_name == 'pull_request_target' && github.event.action != 'closed'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     concurrency:
@@ -41,10 +47,13 @@ jobs:
       ref: ${{ github.event.pull_request.merge_commit_sha }}
 
   tag-release:
-    name: Tag merged PR
+    name: Resolve release tag
     needs: tests
+    if: ${{ !cancelled() && (needs.tests.result == 'success' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    outputs:
+      tag: ${{ steps.tag.outputs.tag || steps.existing.outputs.tag }}
     concurrency:
       group: addon-release-tags
       queue: max
@@ -54,10 +63,72 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          ref: ${{ github.event.pull_request.merge_commit_sha || github.sha }}
+          fetch-depth: 0
       - name: Push the next dated tag for the tested commit
+        id: tag
+        if: github.event_name == 'pull_request_target'
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           MERGED_SHA: ${{ github.event.pull_request.merge_commit_sha }}
         run: python3 .github/release.py tag "$PR_NUMBER" "$MERGED_SHA"
+      - name: Verify existing dated tag
+        id: existing
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: python3 .github/release.py existing-tag "$RELEASE_TAG" "$GITHUB_SHA"
+
+  package-release:
+    needs: tag-release
+    if: needs.tag-release.outputs.tag != ''
+    permissions:
+      contents: read
+    uses: ./.github/workflows/ci.yml
+    with:
+      ref: refs/tags/${{ needs.tag-release.outputs.tag }}
+      release-tag: ${{ needs.tag-release.outputs.tag }}
+
+  publish-release:
+    name: Attach ZIP to GitHub Release
+    needs: [tag-release, package-release]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: addon-release-asset-${{ needs.tag-release.outputs.tag }}
+      queue: max
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: addon-release-package
+          path: package
+      - name: Publish the validated addon ZIP
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.tag-release.outputs.tag }}
+        run: |
+          shopt -s nullglob
+          archives=(package/*.zip)
+          test "${#archives[@]}" -eq 1
+          archive=${archives[0]}
+          asset=${archive##*/}
+
+          if ! release=$(gh release view "$RELEASE_TAG" --json assets,isDraft); then
+            options=()
+            if [[ $RELEASE_TAG == *-beta ]]; then
+              options+=(--prerelease)
+            fi
+            gh release create "$RELEASE_TAG" --verify-tag --draft --title "$RELEASE_TAG" --notes "" "${options[@]}"
+            release=$(gh release view "$RELEASE_TAG" --json assets,isDraft)
+          fi
+
+          if ! jq -e --arg name "$asset" '.assets | any(.name == $name and .state == "uploaded")' <<< "$release" >/dev/null; then
+            gh release upload "$RELEASE_TAG" "$archive" --clobber
+          fi
+          if jq -e '.isDraft' <<< "$release" >/dev/null; then
+            gh release edit "$RELEASE_TAG" --draft=false
+          fi
