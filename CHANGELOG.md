@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026.11.21.03
+
+- Add the Auction Sync icon to the in-game AddOn List.
+
 ## 2026.11.21.02
 
 - List Auction Sync under Auctions in the in-game AddOn List.

@@ -1,5 +1,6 @@
 ## Interface: 16001
 ## Title: Auction Sync
+## IconTexture: Interface\AddOns\AuctionSync\AuctionSync
 ## Notes: Import AHDB faction auction-house scan prices into Auctionator automatically. No second full scan needed.
 ## Version: @project-version@
 ## Dependencies: AuctionDB, Auctionator
