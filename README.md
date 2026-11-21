@@ -55,8 +55,6 @@ MIT licensed. An independent integration, not affiliated with the AHDB or Auctio
 
 Download Auction Sync from [CurseForge](https://www.curseforge.com/wow/addons/auction-sync) or [GitHub Releases](https://github.com/joachimtingvold/wow-auction-sync/releases). Extract the ZIP and put the `AuctionSync` folder in your game's `Interface/AddOns` directory. Back up your Auctionator saved variables before first use.
 
-If you installed an earlier beta under the previous name, remove its addon folder before starting the game. Auction Sync starts with default sync settings under its new name.
-
 ## Troubleshooting
 
 If the listener is inactive, check that both dependencies are enabled, run `/reload`, then try `/ahsync status` again.
