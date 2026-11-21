@@ -13,7 +13,7 @@ class PackageContentsTest(unittest.TestCase):
                          f'Expected one BigWigs ZIP under .release, found {archives}')
         prefix = 'AuctionSync/'
         expected = {prefix + name for name in (
-            'AuctionSync.lua', 'AuctionSync.toc',
+            'AuctionSync.lua', 'AuctionSync.toc', 'AuctionSync.tga',
             'LICENSE', 'README.md', 'CHANGELOG.md',
         )}
         with zipfile.ZipFile(archives[0]) as archive:
@@ -33,6 +33,10 @@ class PackageContentsTest(unittest.TestCase):
             self.assertEqual(headers.get('Dependencies'), source_headers.get('Dependencies'),
                              'Packaged dependencies differ from the source TOC')
             self.assertEqual(headers['Title'].strip(), 'Auction Sync')
+            self.assertEqual(headers['IconTexture'].strip(), r'Interface\AddOns\AuctionSync\AuctionSync')
+            self.assertEqual(archive.read(prefix + 'AuctionSync.tga'),
+                             (root / 'AuctionSync.tga').read_bytes(),
+                             'Packaging changed the addon icon')
             self.assertEqual(headers['Category'].strip(), 'Auctions')
             self.assertEqual(headers['SavedVariables'].strip(), 'AuctionSyncDB')
             self.assertTrue(headers.get('Version', '').strip(), 'Packaged version is empty')
