@@ -2,9 +2,7 @@
 
 This addon syncs prices from AHDB to Auctionator.
 
-## Why would you need that?
-
-AHDB provides a detailed pricing overview, with historical prices, average pricing, and separate prices for neutral and faction auction houses. Auctionator offers a better auction-house interface, and many other addons use its pricing data.
+Why would you need that? AHDB provides a detailed pricing overview, with historical prices, average pricing, and separate prices for neutral and faction auction houses. Auctionator offers a better auction-house interface, and many other addons use its pricing data.
 
 Using both makes sense, but keeping their prices current normally requires separate scans. The auction house has a shared 15-minute full-scan cooldown, so AHDB and Auctionator cannot scan in rapid succession. You would have to wait before running the second scan, or keep using older prices.
 
