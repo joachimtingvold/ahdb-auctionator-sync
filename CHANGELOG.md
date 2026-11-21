@@ -1,14 +1,14 @@
 # Changelog
 
-## 2026.11.21.02 — 2026-11-21
+## 2026.11.21.02
 
 - List Auction Sync under Auctions in the in-game AddOn List.
 
-## 2026.11.21.01-beta — 2026-11-21
+## 2026.11.21.01-beta
 
 - Rename the addon to Auction Sync and the install folder to `AuctionSync`.
 
-## 2026.11.20.02-beta — 2026-11-20
+## 2026.11.20.02-beta
 
 This beta adds an installable addon ZIP to GitHub Releases.
 
