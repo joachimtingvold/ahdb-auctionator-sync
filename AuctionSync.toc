@@ -1,8 +1,8 @@
 ## Interface: 16001
-## Title: AHDB Auctionator Sync
+## Title: Auction Sync
 ## Notes: Import AHDB faction auction-house scan prices into Auctionator automatically. No second full scan needed.
 ## Version: @project-version@
 ## Dependencies: AuctionDB, Auctionator
-## SavedVariables: AHDBAuctionatorSyncDB
+## SavedVariables: AuctionSyncDB
 ## X-Category: Auction & Economy
-AHDBAuctionatorSync.lua
+AuctionSync.lua

@@ -11,9 +11,9 @@ class PackageContentsTest(unittest.TestCase):
         archives = list((root / '.release').glob('*.zip'))
         self.assertEqual(len(archives), 1,
                          f'Expected one BigWigs ZIP under .release, found {archives}')
-        prefix = 'AHDBAuctionatorSync/'
+        prefix = 'AuctionSync/'
         expected = {prefix + name for name in (
-            'AHDBAuctionatorSync.lua', 'AHDBAuctionatorSync.toc',
+            'AuctionSync.lua', 'AuctionSync.toc',
             'LICENSE', 'README.md', 'CHANGELOG.md',
         )}
         with zipfile.ZipFile(archives[0]) as archive:
@@ -22,8 +22,8 @@ class PackageContentsTest(unittest.TestCase):
             self.assertEqual(len(files), len(set(files)), 'ZIP contains duplicate file entries')
             self.assertEqual(set(files), expected,
                              'ZIP must contain only the installable addon files')
-            toc = archive.read(prefix + 'AHDBAuctionatorSync.toc').decode()
-            source_toc = (root / 'AHDBAuctionatorSync.toc').read_text()
+            toc = archive.read(prefix + 'AuctionSync.toc').decode()
+            source_toc = (root / 'AuctionSync.toc').read_text()
             headers = dict(line[3:].split(':', 1) for line in toc.splitlines()
                            if line.startswith('## ') and ':' in line)
             source_headers = dict(line[3:].split(':', 1) for line in source_toc.splitlines()
@@ -32,10 +32,13 @@ class PackageContentsTest(unittest.TestCase):
                              'Packaged interface differs from the source TOC')
             self.assertEqual(headers.get('Dependencies'), source_headers.get('Dependencies'),
                              'Packaged dependencies differ from the source TOC')
+            self.assertEqual(headers['Title'].strip(), 'Auction Sync')
+            self.assertEqual(headers['SavedVariables'].strip(), 'AuctionSyncDB')
             self.assertTrue(headers.get('Version', '').strip(), 'Packaged version is empty')
+            self.assertEqual(archives[0].name, f"AuctionSync-{headers['Version'].strip()}.zip")
             self.assertNotIn('@project-version@', toc, 'Packager did not replace the version token')
-            self.assertEqual(archive.read(prefix + 'AHDBAuctionatorSync.lua').replace(b'\r\n', b'\n'),
-                             (root / 'AHDBAuctionatorSync.lua').read_bytes().replace(b'\r\n', b'\n'),
+            self.assertEqual(archive.read(prefix + 'AuctionSync.lua').replace(b'\r\n', b'\n'),
+                             (root / 'AuctionSync.lua').read_bytes().replace(b'\r\n', b'\n'),
                              'Packaging changed the addon Lua code')
             self.assertEqual(archive.read(prefix + 'CHANGELOG.md').replace(b'\r\n', b'\n'),
                              (root / 'CHANGELOG.md').read_bytes().replace(b'\r\n', b'\n'),

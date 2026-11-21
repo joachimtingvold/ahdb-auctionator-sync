@@ -1,6 +1,6 @@
 -- A successful import records its item count, faction, and timestamp.
 -- Run independently: lua5.1 tests/014_record-import-summary.lua
-local addon_path = (arg[0]:match("^(.*)/") or ".") .. "/../AHDBAuctionatorSync.lua"
+local addon_path = (arg[0]:match("^(.*)/") or ".") .. "/../AuctionSync.lua"
 
 -- Arrange: provide only the WoW/addon interfaces needed by this case.
 local env = setmetatable({}, {__index = _G})
@@ -40,16 +40,16 @@ function env.AuctionDB:LastPrice(id) return prices[id] end
 
 local addon = assert(loadfile(addon_path))
 setfenv(addon, env)()
-frame.OnEvent(frame, "ADDON_LOADED", "AHDBAuctionatorSync")
+frame.OnEvent(frame, "ADDON_LOADED", "AuctionSync")
 frame.OnEvent(frame, "PLAYER_LOGIN")
 
 -- Act.
-env.SlashCmdList.AHDBAUCTIONATORSYNC("age 0")
-env.SlashCmdList.AHDBAUCTIONATORSYNC("import")
+env.SlashCmdList.AUCTIONSYNC("age 0")
+env.SlashCmdList.AUCTIONSYNC("import")
 
 -- Assert.
 assert(#imports == 1, "Expected a successful import before recording its summary")
-local summary = env.AHDBAuctionatorSyncDB.lastImport
+local summary = env.AuctionSyncDB.lastImport
 assert(type(summary) == "table", "Successful import did not save a summary")
 assert(summary.items == 2, "Summary must count both imported items")
 assert(summary.house == "Alliance", "Summary recorded the wrong faction")

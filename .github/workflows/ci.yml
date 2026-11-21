@@ -37,7 +37,7 @@ jobs:
         env:
           LC_ALL: C
         run: |
-          luac5.1 -p AHDBAuctionatorSync.lua
+          luac5.1 -p AuctionSync.lua
           shopt -s nullglob
           cases=(tests/[0-9][0-9][0-9]_*.lua)
           test "${#cases[@]}" -gt 0 || { echo 'No Lua test cases found'; exit 1; }
@@ -89,7 +89,7 @@ jobs:
 
           archive, = Path(".release").glob("*.zip")
           with ZipFile(archive) as package:
-              toc = package.read("AHDBAuctionatorSync/AHDBAuctionatorSync.toc").decode()
+              toc = package.read("AuctionSync/AuctionSync.toc").decode()
           versions = [line.partition(":")[2].strip() for line in toc.splitlines()
                       if line.startswith("## Version:")]
           tag = os.environ["RELEASE_TAG"]

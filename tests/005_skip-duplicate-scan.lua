@@ -1,6 +1,6 @@
 -- A repeated callback for the same scan imports prices only once.
 -- Run independently: lua5.1 tests/005_skip-duplicate-scan.lua
-local addon_path = (arg[0]:match("^(.*)/") or ".") .. "/../AHDBAuctionatorSync.lua"
+local addon_path = (arg[0]:match("^(.*)/") or ".") .. "/../AuctionSync.lua"
 
 -- Arrange: provide only the WoW/addon interfaces needed by this case.
 local env = setmetatable({}, {__index = _G})
@@ -30,7 +30,7 @@ end
 
 local addon = assert(loadfile(addon_path))
 setfenv(addon, env)()
-frame.OnEvent(frame, "ADDON_LOADED", "AHDBAuctionatorSync")
+frame.OnEvent(frame, "ADDON_LOADED", "AuctionSync")
 frame.OnEvent(frame, "PLAYER_LOGIN")
 
 -- Act.

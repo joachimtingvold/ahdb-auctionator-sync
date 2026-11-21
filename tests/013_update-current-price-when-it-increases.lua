@@ -1,6 +1,6 @@
 -- Regression: a higher new price replaces the earlier current price.
 -- Run independently: lua5.1 tests/013_update-current-price-when-it-increases.lua
-local addon_path = (arg[0]:match("^(.*)/") or ".") .. "/../AHDBAuctionatorSync.lua"
+local addon_path = (arg[0]:match("^(.*)/") or ".") .. "/../AuctionSync.lua"
 
 -- Arrange: provide only the WoW/addon interfaces needed by this case.
 local env = setmetatable({}, {__index = _G})
@@ -33,7 +33,7 @@ env.Auctionator.Database.db["10940"] = {m = 100}
 
 local addon = assert(loadfile(addon_path))
 setfenv(addon, env)()
-frame.OnEvent(frame, "ADDON_LOADED", "AHDBAuctionatorSync")
+frame.OnEvent(frame, "ADDON_LOADED", "AuctionSync")
 frame.OnEvent(frame, "PLAYER_LOGIN")
 
 -- Act.

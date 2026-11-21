@@ -1,4 +1,4 @@
-package-as: AHDBAuctionatorSync
+package-as: AuctionSync
 
 # CurseForge dependency slugs (not bundled into the addon ZIP).
 required-dependencies:

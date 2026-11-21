@@ -1,4 +1,4 @@
-# AHDB Auctionator Sync
+# Auction Sync
 
 This addon syncs prices from AHDB to Auctionator. Why would you need that?
 
@@ -6,7 +6,7 @@ AHDB provides a detailed pricing overview, with historical prices, average prici
 
 Using both makes sense, but keeping their prices current normally requires separate scans. The auction house has a shared 15-minute full-scan cooldown, so AHDB and Auctionator cannot scan in rapid succession. You would have to wait before running the second scan, or keep using older prices.
 
-AHDB Auctionator Sync copies prices from completed AHDB scans into Auctionator’s pricing database. Scan once with AHDB, keep its detailed price history, and use Auctionator’s interface and the addons that depend on its prices. The best of both worlds, without a second scan.
+Auction Sync copies prices from completed AHDB scans into Auctionator’s pricing database. Scan once with AHDB, keep its detailed price history, and use Auctionator’s interface and the addons that depend on its prices. The best of both worlds, without a second scan.
 
 ## Features
 
@@ -53,7 +53,7 @@ MIT licensed. An independent integration, not affiliated with the AHDB or Auctio
 
 ## Manual installation
 
-Extract the addon ZIP and put the `AHDBAuctionatorSync` folder in your game's `Interface/AddOns` directory. Back up your Auctionator saved variables before first use.
+Download Auction Sync from [CurseForge](https://www.curseforge.com/wow/addons/auction-sync) or [GitHub Releases](https://github.com/joachimtingvold/wow-auction-sync/releases). Extract the ZIP and put the `AuctionSync` folder in your game's `Interface/AddOns` directory. Back up your Auctionator saved variables before first use.
 
 ## Troubleshooting
 
@@ -61,4 +61,4 @@ If the listener is inactive, check that both dependencies are enabled, run `/rel
 
 If no prices are imported, check that the scan completed at your own faction's auction house. For older stored prices, try `/ahsync age 72` followed by `/ahsync import`.
 
-For errors, enable `/console scriptErrors 1` and report the error with your AHDB and Auctionator versions in [GitHub Issues](https://github.com/joachimtingvold/ahdb-auctionator-sync/issues).
+For errors, enable `/console scriptErrors 1` and report the error with your AHDB and Auctionator versions in [GitHub Issues](https://github.com/joachimtingvold/wow-auction-sync/issues).
