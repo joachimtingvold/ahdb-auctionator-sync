@@ -1,6 +1,8 @@
 # Auction Sync
 
-This addon syncs prices from AHDB to Auctionator. Why would you need that?
+This addon syncs prices from AHDB to Auctionator.
+
+## Why would you need that?
 
 AHDB provides a detailed pricing overview, with historical prices, average pricing, and separate prices for neutral and faction auction houses. Auctionator offers a better auction-house interface, and many other addons use its pricing data.
 

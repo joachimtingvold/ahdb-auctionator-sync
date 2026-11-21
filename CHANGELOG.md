@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased
+## 2026.11.21.02 — 2026-11-21
+
+- List Auction Sync under Auctions in the in-game AddOn List.
+- Give the README's explanation of why Auction Sync is useful its own section.
+
+## 2026.11.21.01-beta — 2026-11-21
 
 - Rename the addon to Auction Sync and the install folder to `AuctionSync`.
 

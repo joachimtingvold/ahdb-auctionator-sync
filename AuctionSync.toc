@@ -4,5 +4,5 @@
 ## Version: @project-version@
 ## Dependencies: AuctionDB, Auctionator
 ## SavedVariables: AuctionSyncDB
-## X-Category: Auction & Economy
+## Category: Auctions
 AuctionSync.lua

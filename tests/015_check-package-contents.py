@@ -33,6 +33,7 @@ class PackageContentsTest(unittest.TestCase):
             self.assertEqual(headers.get('Dependencies'), source_headers.get('Dependencies'),
                              'Packaged dependencies differ from the source TOC')
             self.assertEqual(headers['Title'].strip(), 'Auction Sync')
+            self.assertEqual(headers['Category'].strip(), 'Auctions')
             self.assertEqual(headers['SavedVariables'].strip(), 'AuctionSyncDB')
             self.assertTrue(headers.get('Version', '').strip(), 'Packaged version is empty')
             self.assertEqual(archives[0].name, f"AuctionSync-{headers['Version'].strip()}.zip")
